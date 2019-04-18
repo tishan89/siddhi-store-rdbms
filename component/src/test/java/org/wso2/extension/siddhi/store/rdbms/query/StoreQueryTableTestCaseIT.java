@@ -478,27 +478,47 @@ public class StoreQueryTableTestCaseIT {
 
         siddhiAppRuntime.start();
 
-        stockStream.send(new Object[]{"WSO2", 55.6f, 100L});
-        stockStream.send(new Object[]{"IBM", 75.6f, 100L});
-        stockStream.send(new Object[]{"WSO2", 57.6f, 100L});
+        stockStream.send(new Object[]{"WSO2", 55.6f, 30L});
+        stockStream.send(new Object[]{"IBM", 57.6f, 150L});
+        stockStream.send(new Object[]{"IBM", 57.6f, 50L});
+        stockStream.send(new Object[]{"WSO2", 50.0f, 200L});
         Thread.sleep(500);
 
         String storeQuery = "" +
                 "from StockTable " +
-                "on price > 56 " +
-                "select symbol, price, sum(volume) as totalVolume " +
-                "group by symbol, price ";
+                "on price > 53 " +
+                "select symbol, price, sum(volume) as totalVolume, avg(volume) as avgVolume, " +
+                "min(volume) as minVolume, max(volume) as maxVolume " +
+                "group by symbol, price "
+                + "order by price desc";
         Event[] events = siddhiAppRuntime.query(storeQuery);
         EventPrinter.print(events);
         AssertJUnit.assertEquals(2, events.length);
-        AssertJUnit.assertEquals(100L, events[0].getData()[2]);
-        AssertJUnit.assertEquals(100L, events[1].getData()[2]);
 
+        AssertJUnit.assertEquals(200L, events[0].getData()[2]);
+        AssertJUnit.assertEquals(100.0, events[0].getData()[3]);
+        AssertJUnit.assertEquals(50L, events[0].getData()[4]);
+        AssertJUnit.assertEquals(150L, events[0].getData()[5]);
+
+        AssertJUnit.assertEquals(30L, events[1].getData()[2]);
+        AssertJUnit.assertEquals(30.0, events[1].getData()[3]);
+        AssertJUnit.assertEquals(30L, events[1].getData()[4]);
+        AssertJUnit.assertEquals(30L, events[1].getData()[5]);
+
+        //Executing same store query again.
         events = siddhiAppRuntime.query(storeQuery);
         EventPrinter.print(events);
         AssertJUnit.assertEquals(2, events.length);
-        AssertJUnit.assertEquals(100L, events[0].getData()[2]);
-        AssertJUnit.assertEquals(100L, events[1].getData()[2]);
+
+        AssertJUnit.assertEquals(200L, events[0].getData()[2]);
+        AssertJUnit.assertEquals(100.0, events[0].getData()[3]);
+        AssertJUnit.assertEquals(50L, events[0].getData()[4]);
+        AssertJUnit.assertEquals(150L, events[0].getData()[5]);
+
+        AssertJUnit.assertEquals(30L, events[1].getData()[2]);
+        AssertJUnit.assertEquals(30.0, events[1].getData()[3]);
+        AssertJUnit.assertEquals(30L, events[1].getData()[4]);
+        AssertJUnit.assertEquals(30L, events[1].getData()[5]);
     }
 
     @Test
